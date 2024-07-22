@@ -1,0 +1,135 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Cloudfront+S3 deployment stack.
+
+Parameters:
+  AppEnvironment:
+    Type: String
+    Description: The environment this stack should be assumed as.
+    Default: staging
+    AllowedValues:
+      - staging
+      - production
+  AppName:
+    Type: String
+    Description: Project name or app name.
+  CertificateArn:
+    Type: String
+    Description: ARN of the SSL certificate to use for HTTPS listener.
+  CloudFrontCachePolicy:
+    Type: String
+    Description: Managed-CachingOptimized policy ID
+    Default: 658327ea-f89d-4fab-a63d-7e88639e58f6
+  CloudFrontResponseHeadersPolicy:
+    Type: String
+    Description: Managed-CORS-With-Preflight response headerspolicy ID.
+    Default: 5cc3b908-e619-4b99-88e5-2cf7f45965bd
+  CloudFrontOriginRequestPolicyId:
+    Type: String
+    Description: Managed-CORS-S3Origin origin request policy ID.
+    Default: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf
+  CustomErrorResponsePath:
+    Type: String
+    Description: Custom error page response path.
+    Default: "/index.html"
+  DefaultRootObject:
+    Type: String
+    Description: The object that you want CloudFront to request from your origin (for example, index.html)
+    Default: "index.html"
+  ErrorCachingMinTTL:
+    Type: Number
+    Description: Mininum TTL for error caching
+    Default: 10
+  ZoneName:
+    Type: String
+    Description: The Route 53 zone under which subdomain(s) will be created.
+  ZoneSubdomain:
+    Type: String
+    Description: The subdomain which will point to the load balancer in this stack.
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ["-", [!Ref AppName, !Ref AppEnvironment]]
+
+  CloudFrontOriginIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub "CloudFront OAI for ${AppName} ${AppEnvironment}"
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOriginIdentity.S3CanonicalUserId
+            Action: s3:GetObject
+            Resource: !Sub "${S3Bucket.Arn}/*"
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Join ["", [!Ref ZoneSubdomain, ., !Ref ZoneName]]
+        CustomErrorResponses:
+          - ErrorCachingMinTTL: !Ref ErrorCachingMinTTL
+            ErrorCode: "403"
+            ResponseCode: "200"
+            ResponsePagePath: !Ref CustomErrorResponsePath
+          - ErrorCachingMinTTL: !Ref ErrorCachingMinTTL
+            ErrorCode: "404"
+            ResponseCode: "200"
+            ResponsePagePath: !Ref CustomErrorResponsePath
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachePolicyId: !Ref CloudFrontCachePolicy
+          ForwardedValues:
+            QueryString: true
+          OriginRequestPolicyId: !Ref CloudFrontOriginRequestPolicyId
+          ResponseHeadersPolicyId: !Ref CloudFrontResponseHeadersPolicy
+          TargetOriginId: !GetAtt S3Bucket.RegionalDomainName
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: !Ref DefaultRootObject
+        Enabled: true
+        HttpVersion: http2
+        Origins:
+            - Id: !GetAtt S3Bucket.RegionalDomainName
+              DomainName: !GetAtt S3Bucket.RegionalDomainName
+              OriginPath: ""
+              S3OriginConfig:
+                OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginIdentity}"
+              ConnectionAttempts: 3
+              ConnectionTimeout: 10
+        PriceClass: PriceClass_All
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
+
+  CloudFrontDistributionDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Join ["", [!Ref ZoneName, .]]
+      Name: !Join ["", [!Ref ZoneSubdomain, ., !Ref ZoneName, .]]
+      Type: CNAME
+      TTL: "3600"
+      ResourceRecords:
+        - !GetAtt CloudFrontDistribution.DomainName
+
+Outputs:
+  CloudfrontEndpoint:
+    Description: Assets CDN endpoint
+    Value: !Join ["", ["https://", !Ref CloudFrontDistributionDNSRecord]]
+
+  S3BucketName:
+    Description: Name of the bucket to deploy code to. The base directory should contain the document root for the project.
+    Value: !Ref S3Bucket
