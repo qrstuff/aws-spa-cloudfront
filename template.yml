@@ -102,13 +102,13 @@ Resources:
         Enabled: true
         HttpVersion: http2
         Origins:
-            - Id: !GetAtt S3Bucket.RegionalDomainName
-              DomainName: !GetAtt S3Bucket.RegionalDomainName
-              OriginPath: ""
-              S3OriginConfig:
-                OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginIdentity}"
-              ConnectionAttempts: 3
-              ConnectionTimeout: 10
+          - Id: !GetAtt S3Bucket.RegionalDomainName
+            DomainName: !GetAtt S3Bucket.RegionalDomainName
+            OriginPath: ""
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginIdentity}"
+            ConnectionAttempts: 3
+            ConnectionTimeout: 10
         PriceClass: PriceClass_All
         ViewerCertificate:
           AcmCertificateArn: !Ref CertificateArn

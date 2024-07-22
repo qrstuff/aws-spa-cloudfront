@@ -25,56 +25,54 @@ To observe stack status:
 watch -g -n 5 aws cloudformation describe-stacks --stack-name <stack-name> --query 'Stacks[0].StackStatus'
 ```
 
-
 #### Available Parameters
 
 Following parameters are available for customization. Defaults can be set in the template, and can be overridden via the params.json(refer params-example.json for structure). The cache, response headers and origin request policies have been set according to S3 origin, the policy id can be overridden to point to custom user created policies.
 
 ```yaml
-  AppEnvironment:
-    Type: String
-    Description: The environment this stack should be assumed as.
-    Default: staging
-    AllowedValues:
-      - staging
-      - uat
-      - production
-  AppName:
-    Type: String
-    Description: Project name or app name.
-  CertificateArn:
-    Type: String
-    Description: ARN of the SSL certificate to use for HTTPS listener.
-  CloudFrontCachePolicy:
-    Type: String
-    Description: Managed-CachingOptimized policy ID
-    Default: 658327ea-f89d-4fab-a63d-7e88639e58f6
-  CloudFrontResponseHeadersPolicy:
-    Type: String
-    Description: Managed-CORS-With-Preflight response headerspolicy ID.
-    Default: 5cc3b908-e619-4b99-88e5-2cf7f45965bd
-  CloudFrontOriginRequestPolicyId:
-    Type: String
-    Description: Managed-CORS-S3Origin origin request policy ID.
-    Default: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf
-  CustomErrorResponsePath:
-    Type: String
-    Description: Custom error page response path.
-    Default: "/index.html"
-  DefaultRootObject:
-    Type: String
-    Description: The object that you want CloudFront to request from your origin (for example, index.html)
-    Default: "index.html"
-  ErrorCachingMinTTL:
-    Type: Number
-    Description: Mininum TTL for error caching
-    Default: 10
-  ZoneName:
-    Type: String
-    Description: The Route 53 zone under which subdomain(s) will be created.
-  ZoneSubdomain:
-    Type: String
-    Description: The subdomain which will point to the load balancer in this stack.
+AppEnvironment:
+  Type: String
+  Description: The environment this stack should be assumed as.
+  Default: staging
+  AllowedValues:
+    - staging
+    - production
+AppName:
+  Type: String
+  Description: Project name or app name.
+CertificateArn:
+  Type: String
+  Description: ARN of the SSL certificate to use for HTTPS listener.
+CloudFrontCachePolicy:
+  Type: String
+  Description: Managed-CachingOptimized policy ID
+  Default: 658327ea-f89d-4fab-a63d-7e88639e58f6
+CloudFrontResponseHeadersPolicy:
+  Type: String
+  Description: Managed-CORS-With-Preflight response headerspolicy ID.
+  Default: 5cc3b908-e619-4b99-88e5-2cf7f45965bd
+CloudFrontOriginRequestPolicyId:
+  Type: String
+  Description: Managed-CORS-S3Origin origin request policy ID.
+  Default: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf
+CustomErrorResponsePath:
+  Type: String
+  Description: Custom error page response path.
+  Default: "/index.html"
+DefaultRootObject:
+  Type: String
+  Description: The object that you want CloudFront to request from your origin (for example, index.html)
+  Default: "index.html"
+ErrorCachingMinTTL:
+  Type: Number
+  Description: Mininum TTL for error caching
+  Default: 10
+ZoneName:
+  Type: String
+  Description: The Route 53 zone under which subdomain(s) will be created.
+ZoneSubdomain:
+  Type: String
+  Description: The subdomain which will point to the load balancer in this stack.
 ```
 
 ## License
