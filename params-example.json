@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "AppEnvironment",
+    "ParameterValue": "env"
+  },
+  {
+    "ParameterKey": "AppName",
+    "ParameterValue": "app-name"
+  },
+  {
+    "ParameterKey": "CertificateArn",
+    "ParameterValue": "arn:aws:acm:<region>:<account-id>:certificate/<certificate-id>"
+  },
+  {
+    "ParameterKey": "ZoneName",
+    "ParameterValue": "<zone-name>"
+  },
+  {
+    "ParameterKey": "ZoneSubdomain",
+    "ParameterValue": "<zone-subdomain-name>"
+  }
+]
